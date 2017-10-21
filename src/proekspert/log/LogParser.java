@@ -23,7 +23,7 @@ public class LogParser {
     private List<String> readFile(String fileName){
         List<String> lines = new ArrayList<>();
 
-        try (BufferedReader br = Files.newBufferedReader(Paths.get("./timing.log"))) {
+        try (BufferedReader br = Files.newBufferedReader(Paths.get("./" + fileName))) {
             lines = br.lines().collect(Collectors.toList());
         } catch (IOException e) {
             e.printStackTrace();
