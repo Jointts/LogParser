@@ -23,16 +23,7 @@ public class LogParser {
     private List<String> readFile(String fileName){
         List<String> lines = new ArrayList<>();
 
-        URI absolutePath = null;
-        try {
-            absolutePath = getClass().getResource(fileName).toURI();
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-
-        assert absolutePath != null;
-
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(absolutePath))) {
+        try (BufferedReader br = Files.newBufferedReader(Paths.get("./timing.log"))) {
             lines = br.lines().collect(Collectors.toList());
         } catch (IOException e) {
             e.printStackTrace();

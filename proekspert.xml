@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="proekspert" default="compile">
+
+  <!-- Module proekspert -->
+
+  <property name="fileName" value="timing.log"/>
+  <property name="nTopResources" value="10"/>
+
+  <dirname property="module.proekspert.basedir" file="${ant.file}"/>
+
+  <property name="compiler.args.proekspert" value="-encoding UTF-8 -source 1.8 -target 1.8"/>
+
+  <property name="proekspert.output.dir" value="${module.proekspert.basedir}/dist"/>
+
+  <target name="compile" description="Compile module proekspert">
+    <mkdir dir="build/classes"/>
+    <javac srcdir="src" destdir="build/classes"/>
+  </target>
+
+  <target name="jar" description="Jar module proekspert" depends="compile">
+    <mkdir dir="${proekspert.output.dir}"/>
+    <jar destfile="${proekspert.output.dir}/proekspert.jar" basedir="build/classes">
+      <manifest>
+        <attribute name="Main-Class" value="proekspert.log.Main"/>
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="build" depends="compile, jar" description="Compile and Jar the executable"/>
+
+  <target name="run" depends="build" description="Build and start the application">
+    <copy file="timing.log" tofile="dist/timing.log"/>
+    <java jar="dist/${ant.project.name}.jar" fork="true">
+      <arg value="${fileName}"/>
+      <arg value="${nTopResources}"/>
+    </java>
+  </target>
+
+</project>

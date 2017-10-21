@@ -21,13 +21,37 @@ public class LogEntry implements Comparable<LogEntry> {
         requestDurationMs = builder.requestDurationMs;
     }
 
-    public static Builder newBuilder() {
-        return new Builder();
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public LocalTime getTimestamp() {
+        return timestamp;
+    }
+
+    public String getThreadId() {
+        return threadId;
+    }
+
+    public Map<String, String> getUserContext() {
+        return userContext;
+    }
+
+    public String getRequestURI() {
+        return requestURI;
+    }
+
+    public int getRequestDurationMs() {
+        return requestDurationMs;
     }
 
     @Override
     public int compareTo(LogEntry otherEntry) {
         return otherEntry.requestDurationMs - this.requestDurationMs;
+    }
+
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
 
