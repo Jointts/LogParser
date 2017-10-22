@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Class responsible for sorting log entries
+ * Class responsible for sorting/calculating log entries
  */
 class LogEntryService {
 
@@ -36,14 +36,21 @@ class LogEntryService {
      * second parameter the average duration of the requests made to the resource
      */
     Map<String, Integer> calculateAverageResourceTime(List<LogEntry> logEntryList, int responsesToExtract) {
-        Map<String, Integer> averageTimeLogEntryMap = new HashMap<>();
+        Map<String, AbstractMap.SimpleEntry<Integer, Integer>> averageTimeLogEntryMap = new HashMap<>();
+        Map<String, Integer> output = new HashMap<>();
 
+        // This seems cryptic, but actually the principle is to have something along the
+        // lines of a structure <requestURI> <numberOfRequests> <totalOfAllRequestsInMs>
+        // so we can later on do <requestURI> <totalOfAllRequestsInMs/numberOfRequests>
+        // to get the average length of requests
         logEntryList.forEach(logEntry -> {
-            averageTimeLogEntryMap.computeIfPresent(logEntry.extractResourceName(), (logEntryInstance, requestDuration) -> requestDuration + logEntry.getRequestDurationMs());
-            averageTimeLogEntryMap.putIfAbsent(logEntry.extractResourceName(), logEntry.getRequestDurationMs());
+            averageTimeLogEntryMap.computeIfPresent(logEntry.extractResourceName(), (requestURI, simpleEntry) -> new AbstractMap.SimpleEntry<>(simpleEntry.getKey() + 1, simpleEntry.getValue() + logEntry.getRequestDurationMs()));
+            averageTimeLogEntryMap.putIfAbsent(logEntry.extractResourceName(), new AbstractMap.SimpleEntry<>(1, logEntry.getRequestDurationMs()));
         });
 
-        return averageTimeLogEntryMap.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).limit(responsesToExtract)
+        averageTimeLogEntryMap.forEach((requestURI, simpleEntry) -> output.put(requestURI, simpleEntry.getValue() / simpleEntry.getKey()));
+
+        return output.entrySet().stream().sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())).limit(responsesToExtract)
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         Map.Entry::getValue,

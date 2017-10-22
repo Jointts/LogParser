@@ -114,7 +114,7 @@ class LogEntryPresenter {
      * Draw/show the scene
      */
     void drawScene() {
-        primaryStage.setScene(new Scene(root, 800, 400));
+        primaryStage.setScene(new Scene(root, 1000, 500));
         primaryStage.show();
     }
 }
