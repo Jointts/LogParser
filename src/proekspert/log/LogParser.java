@@ -34,6 +34,8 @@ class LogParser {
 
     private final int PAYLOAD_PARAMETERS = 5;
 
+    private final String FILE_READ_ERROR = "Could not open file, log file may be corrupted or missing";
+
     /**
      * Wrapper function for parsing the log file
      * @param fileURI String of the file path to read
@@ -55,7 +57,7 @@ class LogParser {
         try (BufferedReader br = Files.newBufferedReader(Paths.get("./" + fileName))) {
             lines = br.lines().collect(Collectors.toList());
         } catch (IOException e) {
-            System.out.println("Could not open file, log file may be corrupted or missing");
+            System.out.println(FILE_READ_ERROR);
             System.exit(-1);
         }
 
