@@ -4,8 +4,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
+/**
+ * Object representation of a single log line
+ */
 public class LogEntry implements Comparable<LogEntry> {
     private LocalDate date;
     private LocalTime timestamp;
@@ -53,19 +55,22 @@ public class LogEntry implements Comparable<LogEntry> {
         return requestDurationMs;
     }
 
-    // Usually a resource is a REST endpoint without query params
+    // Usually a resource is a REST endpoint without query params,
+    // it is usually a model exposed via URI (for example: /users)
+    // which can have CRUD endpoints <- however these are considered as
+    // operations and should not count as separate resource entities
+    // Identifying a resource as such is not feasible for automation
+    // as the computer needs to understand the context of the request.
+
+    /**
+     * Converts the full query url to a resource URI
+     * @return String without query params
+     */
     public String extractResourceName() {
-        if(requestURI.contains("?")){
+        if (requestURI.contains("?")) {
             return requestURI.split("\\?")[0];
         }
         return requestURI;
-    }
-
-    @Override
-    public boolean equals(Object objectToCompare) {
-        if(!(objectToCompare instanceof LogEntry)) return false;
-        LogEntry logEntry = (LogEntry) objectToCompare;
-        return Objects.equals(extractResourceName(), logEntry.extractResourceName());
     }
 
     @Override

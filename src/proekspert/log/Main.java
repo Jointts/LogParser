@@ -1,26 +1,10 @@
 package proekspert.log;
 
-import com.sun.javafx.collections.ObservableListWrapper;
 import javafx.application.Application;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.geometry.Insets;
-import javafx.scene.Scene;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.CategoryAxis;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
 
 public class Main extends Application {
 
@@ -32,31 +16,52 @@ public class Main extends Application {
 
     private LogEntryService logEntryService = new LogEntryService();
 
-    private List<LogEntry> logEntryList = new ArrayList<>();
+    private LogEntryPresenter logEntryPresenter = new LogEntryPresenter();
 
     private String fileURI;
 
     private int resourcesNum;
 
-    long timeBefore;
+    private long timeLaunched;
 
     @Override
     public void init() throws Exception {
-        timeBefore = System.currentTimeMillis();
+        timeLaunched = System.currentTimeMillis();
         super.init();
     }
 
+    /**
+     * Application entry point
+     * @param primaryStage JavaFX supplied Stage object
+     * @throws Exception Throws an exception if file reading or parameter checking fails
+     */
     @Override
     public void start(Stage primaryStage) throws Exception {
         getParams();
-        logEntryList = logParser.parse(fileURI);
 
-        drawHistogram(primaryStage);
+        List<LogEntry> logEntryList = logParser.parse(fileURI);
+
+        Map<String, Integer> hourlyRequests = logEntryService.getHourlyRequests(logEntryList);
+        Map<String, Integer> nTopResources = logEntryService.calculateAverageResourceTime(logEntryList, resourcesNum);
+        long applicationDuration = getApplicationDuration(timeLaunched);
+
+        logEntryPresenter.init(primaryStage);
+        logEntryPresenter.drawHourlyRequestsHistogram(hourlyRequests);
+        logEntryPresenter.drawNTopResources(nTopResources);
+        logEntryPresenter.drawApplicationDuration(applicationDuration);
+
+        logEntryPresenter.drawScene();
     }
 
+    /**
+     * Acquires the CLI parameters and checks if they are supplied
+     *
+     * @throws Exception Throws an exception if not enough parameters are supplied
+     *                   or they are the wrong type
+     */
     private void getParams() throws Exception {
 
-        if(getParameters().getUnnamed().contains("-h")){
+        if (getParameters().getUnnamed().contains("-h")) {
             System.out.println(HELP_TEXT);
             System.exit(0);
         }
@@ -72,71 +77,11 @@ public class Main extends Application {
         }
     }
 
-    public void drawHistogram(Stage primaryStage){
-        Map<String, Integer> hourlyRequests = logEntryService.getHourlyRequests(logEntryList);
-
-        GridPane root = new GridPane();
-        primaryStage.setTitle("ProEkspert - Log parser");
-
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis();
-
-        Set<LogEntry> logEntriesSet= new HashSet<>(logEntryList);
-
-        List<LogEntry> filteredLogEntries = new ArrayList<>(logEntriesSet);
-
-        BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
-
-        barChart.setPadding(new Insets(25, 0, 0, 0));
-
-        xAxis.setLabel("Hour");
-        yAxis.setLabel("Requests");
-
-        XYChart.Series xyChart = new XYChart.Series();
-        xyChart.setName("Hourly requests");
-
-        hourlyRequests.forEach((hour, requests) -> xyChart.getData().add(new XYChart.Data<>(hour, requests)));
-
-        barChart.getData().addAll(xyChart);
-
-        VBox vBox = new VBox();
-        VBox vBox2 = new VBox();
-        VBox vBox3 = new VBox();
-
-        TableView tableView = new TableView();
-
-        List<LogEntry> nTopResources = filteredLogEntries.subList(0, resourcesNum);
-
-        TableColumn<LogEntry, String> timeColumn = new TableColumn<>("Time");
-        TableColumn<LogEntry, String> resourceColumn = new TableColumn<>("Resource");
-
-        timeColumn.setCellValueFactory(resource -> new SimpleStringProperty(String.valueOf(resource.getValue().getRequestDurationMs())));
-        resourceColumn.setCellValueFactory(resource -> new SimpleStringProperty(resource.getValue().extractResourceName()));
-
-        tableView.getColumns().addAll(timeColumn, resourceColumn);
-        tableView.setItems(new ObservableListWrapper<>(nTopResources));
-
-        vBox2.getChildren().add(tableView);
-
-        vBox.setPadding(new Insets(0, 50, 25, 50));
-        vBox2.setPadding(new Insets(0,50,0,50));
-        vBox3.setPadding(new Insets(0,50,0,50));
-
-        vBox3.getChildren().add(barChart);
-
-        long deltaTime = System.currentTimeMillis() - timeBefore;
-
-        Text timeTaken = new Text("Time taken - " + deltaTime + "ms");
-        vBox.getChildren().add(timeTaken);
-
-        root.add(vBox3, 0, 0, 1, 1);
-        root.add(vBox, 0, 2, 1, 1);
-        root.add(vBox2, 0, 1, 1, 1);
-
-        root.setVgap(25);
-        GridPane.setHgrow(vBox3, Priority.ALWAYS);
-
-        primaryStage.setScene(new Scene(root, 800, 400));
-        primaryStage.show();
+    /**
+     * @param launchTime The time in ms, when the application was launched as long
+     * @return Long to indicate how long the application ran
+     */
+    private long getApplicationDuration(long launchTime) {
+        return System.currentTimeMillis() - launchTime;
     }
 }
