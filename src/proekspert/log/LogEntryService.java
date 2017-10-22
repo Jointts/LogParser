@@ -42,7 +42,8 @@ class LogEntryService {
         // This seems cryptic, but actually the principle is to have something along the
         // lines of a structure <requestURI> <numberOfRequests> <totalOfAllRequestsInMs>
         // so we can later on do <requestURI> <totalOfAllRequestsInMs/numberOfRequests>
-        // to get the average length of requests
+        // to get the average length of requests to a specific requestURI/resource
+
         logEntryList.forEach(logEntry -> {
             averageTimeLogEntryMap.computeIfPresent(logEntry.extractResourceName(), (requestURI, simpleEntry) -> new AbstractMap.SimpleEntry<>(simpleEntry.getKey() + 1, simpleEntry.getValue() + logEntry.getRequestDurationMs()));
             averageTimeLogEntryMap.putIfAbsent(logEntry.extractResourceName(), new AbstractMap.SimpleEntry<>(1, logEntry.getRequestDurationMs()));
