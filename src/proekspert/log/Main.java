@@ -19,10 +19,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Main extends Application {
@@ -84,7 +81,9 @@ public class Main extends Application {
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
 
-        Collections.sort(logEntryList);
+        Set<LogEntry> logEntriesSet= new HashSet<>(logEntryList);
+
+        List<LogEntry> filteredLogEntries = new ArrayList<>(logEntriesSet);
 
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
 
@@ -103,17 +102,16 @@ public class Main extends Application {
         VBox vBox = new VBox();
         VBox vBox2 = new VBox();
         VBox vBox3 = new VBox();
-        vBox3.setFillWidth(true);
 
         TableView tableView = new TableView();
 
-        List<LogEntry> nTopResources = logEntryList.subList(0, resourcesNum);
+        List<LogEntry> nTopResources = filteredLogEntries.subList(0, resourcesNum);
 
         TableColumn<LogEntry, String> timeColumn = new TableColumn<>("Time");
         TableColumn<LogEntry, String> resourceColumn = new TableColumn<>("Resource");
 
         timeColumn.setCellValueFactory(resource -> new SimpleStringProperty(String.valueOf(resource.getValue().getRequestDurationMs())));
-        resourceColumn.setCellValueFactory(resource -> new SimpleStringProperty(resource.getValue().getRequestURI()));
+        resourceColumn.setCellValueFactory(resource -> new SimpleStringProperty(resource.getValue().extractResourceName()));
 
         tableView.getColumns().addAll(timeColumn, resourceColumn);
         tableView.setItems(new ObservableListWrapper<>(nTopResources));
@@ -136,6 +134,7 @@ public class Main extends Application {
         root.add(vBox2, 0, 1, 1, 1);
 
         root.setVgap(25);
+        GridPane.setHgrow(vBox3, Priority.ALWAYS);
 
         primaryStage.setScene(new Scene(root, 800, 400));
         primaryStage.show();

@@ -2,7 +2,9 @@ package proekspert.log;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class LogEntry implements Comparable<LogEntry> {
     private LocalDate date;
@@ -10,6 +12,7 @@ public class LogEntry implements Comparable<LogEntry> {
     private String threadId;
     private Map<String, String> userContext;
     private String requestURI;
+    private List<String> payloadParams;
     private int requestDurationMs;
 
     private LogEntry(Builder builder) {
@@ -18,6 +21,7 @@ public class LogEntry implements Comparable<LogEntry> {
         threadId = builder.threadId;
         userContext = builder.userContext;
         requestURI = builder.requestURI;
+        payloadParams = builder.payloadParams;
         requestDurationMs = builder.requestDurationMs;
     }
 
@@ -41,8 +45,27 @@ public class LogEntry implements Comparable<LogEntry> {
         return requestURI;
     }
 
+    public List<String> getPayloadParams() {
+        return payloadParams;
+    }
+
     public int getRequestDurationMs() {
         return requestDurationMs;
+    }
+
+    // Usually a resource is a REST endpoint without query params
+    public String extractResourceName() {
+        if(requestURI.contains("?")){
+            return requestURI.split("\\?")[0];
+        }
+        return requestURI;
+    }
+
+    @Override
+    public boolean equals(Object objectToCompare) {
+        if(!(objectToCompare instanceof LogEntry)) return false;
+        LogEntry logEntry = (LogEntry) objectToCompare;
+        return Objects.equals(extractResourceName(), logEntry.extractResourceName());
     }
 
     @Override
@@ -54,13 +77,13 @@ public class LogEntry implements Comparable<LogEntry> {
         return new Builder();
     }
 
-
     public static final class Builder {
         private LocalDate date;
         private LocalTime timestamp;
         private String threadId;
         private Map<String, String> userContext;
         private String requestURI;
+        private List<String> payloadParams;
         private int requestDurationMs;
 
         private Builder() {
@@ -88,6 +111,11 @@ public class LogEntry implements Comparable<LogEntry> {
 
         public Builder requestURI(String val) {
             requestURI = val;
+            return this;
+        }
+
+        public Builder payloadParams(List<String> val) {
+            payloadParams = val;
             return this;
         }
 

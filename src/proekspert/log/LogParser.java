@@ -38,6 +38,7 @@ public class LogParser {
         lines.forEach(line -> {
             Map<String, String> userContextMap = new HashMap<>();
             List<String> tokens = Arrays.asList(line.split(" "));
+            List<String> payloadParams = new ArrayList<>();
             int tokenSize = tokens.size();
 
             int requestDurationMs = Integer.parseInt(tokens.get(tokenSize - 1));
@@ -45,6 +46,14 @@ public class LogParser {
             String[] userContext = tokens.get(3).replaceAll("[\\[\\]]", "").split(":");
             if(!userContext[0].isEmpty()){
                 userContextMap.put(userContext[0], userContext[1]);
+            }
+
+            // If not equal then log entry contains payload parameters
+            if(tokens.size() != BASE_TOKEN_LENGTH){
+                int numOfPayloadElements = tokens.size() - BASE_TOKEN_LENGTH;
+                for(int tokenPos = 5; tokenPos <= 4 + numOfPayloadElements; tokenPos++){
+                    payloadParams.add(tokens.get(tokenPos));
+                }
             }
 
             String requestURI = tokens.get(4);
@@ -64,6 +73,7 @@ public class LogParser {
                     .requestURI(requestURI)
                     .threadId(threadId)
                     .userContext(userContextMap)
+                    .payloadParams(payloadParams)
                     .date(date)
                     .timestamp(timestamp)
                     .build();
